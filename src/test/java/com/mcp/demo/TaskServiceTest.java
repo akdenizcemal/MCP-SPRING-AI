@@ -78,5 +78,74 @@ class TaskServiceTest {
         assertThat(result).contains("No task with id 99");
         verify(repo, never()).save(any());
     }
+    @Test
+    void searchTasks_blankKeyword_returnsEmptyWithoutQuerying() {
+        assertThat(service.searchTasks("  ")).isEmpty();
+        verifyNoInteractions(repo);
+    }
+
+    @Test
+    void searchTasks_trimsKeywordAndQueries() {
+        List<Task> found = List.of(new Task("Deadlocks", "OS"));
+        when(repo.findByTitleContainingIgnoreCase("dead")).thenReturn(found);
+
+        assertThat(service.searchTasks(" dead ")).isEqualTo(found);
+    }
+
+    @Test
+    void updateTask_changesGivenFieldsOnlyAndSaves() {
+        Task task = new Task("Old", "Maths");
+        when(repo.findById(1L)).thenReturn(Optional.of(task));
+
+        String result = service.updateTask(1L, "New", null);
+
+        assertThat(task.getTitle()).isEqualTo("New");
+        assertThat(task.getSubject()).isEqualTo("Maths");
+        assertThat(result).contains("updated");
+        verify(repo).save(task);
+    }
+
+    @Test
+    void updateTask_nothingToChange_returnsErrorWithoutTouchingRepo() {
+        String result = service.updateTask(1L, " ", null);
+
+        assertThat(result).startsWith("Error");
+        verifyNoInteractions(repo);
+    }
+
+    @Test
+    void updateTask_unknownId_returnsMessageAndSavesNothing() {
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+
+        assertThat(service.updateTask(99L, "New", null)).contains("No task with id 99");
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void deleteTask_completedTask_isDeleted() {
+        Task task = new Task("Deadlocks", "OS");
+        task.markDone();
+        when(repo.findById(1L)).thenReturn(Optional.of(task));
+
+        assertThat(service.deleteTask(1L)).contains("deleted");
+        verify(repo).delete(task);
+    }
+
+    @Test
+    void deleteTask_openTask_isRefusedAndNotDeleted() {
+        Task task = new Task("Deadlocks", "OS");
+        when(repo.findById(1L)).thenReturn(Optional.of(task));
+
+        assertThat(service.deleteTask(1L)).startsWith("Refused");
+        verify(repo, never()).delete(any());
+    }
+
+    @Test
+    void deleteTask_unknownId_returnsMessageAndDeletesNothing() {
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+
+        assertThat(service.deleteTask(99L)).contains("No task with id 99");
+        verify(repo, never()).delete(any());
+    }
 
 }

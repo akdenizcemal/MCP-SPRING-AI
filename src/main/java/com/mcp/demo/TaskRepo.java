@@ -7,4 +7,5 @@ public interface TaskRepo extends JpaRepository<Task, Long> {
     List<Task> findByDoneFalse();
 
     List<Task> findBySubjectIgnoreCaseAndDoneFalse(String subject);
+    List<Task> findByTitleContainingIgnoreCase(String keyword);
 }

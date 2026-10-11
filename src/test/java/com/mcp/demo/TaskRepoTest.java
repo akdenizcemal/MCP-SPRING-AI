@@ -26,4 +26,13 @@ class TaskRepoTest {
                 .extracting(Task::getTitle)
                 .containsExactly("Limits");
     }
+    @Test
+    void findByTitleContaining_isCaseInsensitive() {
+        repo.save(new Task("Revise Deadlocks", "OS"));
+        repo.save(new Task("Limits", "Maths"));
+
+        assertThat(repo.findByTitleContainingIgnoreCase("deadl"))
+                .extracting(Task::getTitle)
+                .containsExactly("Revise Deadlocks");
+    }
 }

@@ -26,4 +26,8 @@ public class Task {
     public boolean isDone() { return done; }
 
     public void markDone() { this.done = true; }
+    public void update(String title, String subject) {
+        if (title != null && !title.isBlank()) this.title = title.trim();
+        if (subject != null && !subject.isBlank()) this.subject = subject.trim();
+    }
 }
